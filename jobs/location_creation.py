@@ -5,7 +5,7 @@ import typing as t
 
 from django.core.exceptions import ValidationError
 from django.db.models.fields.files import FieldFile
-from nautobot.apps.jobs import FileVar, Job, register_jobs
+from nautobot.apps.jobs import FileVar, Job
 from nautobot.dcim.models import LocationType
 
 from .state_abbreviations import STATE_ABBREVIATIONS
@@ -139,10 +139,3 @@ class LocationCreation(Job):
         #         )
         #     else:
         #         self.logger.info("Location already Exists")
-
-
-jobs: list[t.Any] = [
-    LocationCreation,
-]
-
-register_jobs(*jobs)

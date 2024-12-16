@@ -2,9 +2,8 @@
 
 import typing as t
 
+from location_creation import LocationCreation
 from nautobot.apps.jobs import register_jobs
-
-from .location_creation import LocationCreation
 
 jobs: list[t.Any] = [
     LocationCreation,

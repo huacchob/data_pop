@@ -9,4 +9,5 @@ from .location_creation import LocationCreation
 jobs: list[t.Any] = [
     LocationCreation,
 ]
+
 register_jobs(*jobs)

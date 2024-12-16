@@ -27,6 +27,8 @@ class LocationCreation(Job):
     )
 
     class Meta:
+        """Meta class."""
+
         name: str = "Create Locations"
 
     def __init__(self, *args, **kwargs) -> None:

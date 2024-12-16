@@ -45,16 +45,24 @@ class LocationCreation(Job):
         self.debug: bool
         self.locations: t.List[t.Dict[str, str]]
 
-    def find_state_abbr(self, state_two_letters: str) -> t.Optional[str]:
+    def find_state_abbr(self, state: str) -> t.Optional[str]:
         """Find the state based on the two letter code.
 
         Args:
-            state_two_letters (str): state two letter code.
+            state (str): Name of state.
 
         Returns:
             t.Optional[str]: state if found.
         """
-        return STATE_ABBREVIATIONS.get(state_two_letters)
+        if len(state) == 2:
+            state_name: str | None = STATE_ABBREVIATIONS.get(state.upper())
+            if state_name:
+                return state_name
+            else:
+                self.logger.error(msg="State not recognized.")
+                raise ValidationError(message="State not recognized.")
+        else:
+            return state
 
     def get_location_type(
         self,
@@ -110,11 +118,8 @@ class LocationCreation(Job):
                 message=f"Error occurred while parsing CSV file: {e}",
             ) from e
 
-    def run(self, **data: t.Any) -> None:
-        """Run the job."""
-        self.csv_file = data["csv_file"]
-        self.debug = data["debug"]
-        self.parse_csv()
+    def create_locations(self) -> None:
+        """Create locations."""
         state_location_type: LocationType | None = self.get_location_type(
             type_name="State",
         )
@@ -124,7 +129,7 @@ class LocationCreation(Job):
         active_status_object: Status = Status.objects.get(name="Active")
         for row in self.locations:
             state: str | None = self.find_state_abbr(
-                state_two_letters=row["state"],
+                state=row["state"],
             )
 
             state_object, state_created = Location.objects.get_or_create(
@@ -174,3 +179,10 @@ class LocationCreation(Job):
                 )
             if not location_created and self.debug:
                 self.logger.info(msg="Location already exists")
+
+    def run(self, **data: t.Any) -> None:
+        """Run the job."""
+        self.csv_file = data["csv_file"]
+        self.debug = data["debug"]
+        self.parse_csv()
+        self.create_locations()

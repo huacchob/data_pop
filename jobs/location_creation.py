@@ -5,8 +5,9 @@ import typing as t
 
 from django.core.exceptions import ValidationError
 from django.db.models.fields.files import FieldFile
-from nautobot.apps.jobs import FileVar, Job
-from nautobot.dcim.models import LocationType
+from nautobot.apps.jobs import BooleanVar, FileVar, Job
+from nautobot.dcim.models import Location, LocationType
+from nautobot.extras.models import Status
 
 from .state_abbreviations import STATE_ABBREVIATIONS
 
@@ -25,6 +26,12 @@ class LocationCreation(Job):
         description="CSV file containing location data.",
         required=True,
     )
+    debug = BooleanVar(
+        label="Debug",
+        description="Debug",
+        required=False,
+        default=False,
+    )
 
     class Meta:
         """Meta class."""
@@ -35,6 +42,7 @@ class LocationCreation(Job):
         """Initialize Job."""
         super().__init__(*args, **kwargs)
         self.csv_file: FieldFile
+        self.debug: bool
         self.locations: t.List[t.Dict[str, str]]
 
     def find_state_abbr(self, state_two_letters: str) -> t.Optional[str]:
@@ -48,7 +56,11 @@ class LocationCreation(Job):
         """
         return STATE_ABBREVIATIONS.get(state_two_letters)
 
-    def get_location_type(self, site_name: str) -> LocationType | None:
+    def get_location_type(
+        self,
+        site_name: t.Optional[str] = None,
+        type_name: t.Optional[str] = None,
+    ) -> t.Optional[LocationType]:
         """Get location type.
 
         Args:
@@ -59,16 +71,25 @@ class LocationCreation(Job):
         """
         location_type: t.Optional[LocationType] = None
 
-        if site_name.endswith("-DC"):
-            location_type = LocationType.objects.get(
-                name="Data Center",
-            )
-        elif site_name.endswith("-BR"):
-            location_type = LocationType.objects.get(name="Branch")
+        try:
+            if site_name:
+                if site_name.endswith("-DC"):
+                    location_type = LocationType.objects.get(
+                        name="Data Center",
+                    )
+                elif site_name.endswith("-BR"):
+                    location_type = LocationType.objects.get(name="Branch")
 
-        if location_type:
-            return location_type
-        else:
+                return location_type
+
+            elif type_name:
+                location_type = LocationType.objects.get(name=type_name)
+                return location_type
+
+            else:
+                self.logger.error(msg="Location type not passed.")
+
+        except LocationType.DoesNotExist:
             self.logger.error(
                 msg="Location type for {site_name} not found".format(
                     site_name=site_name,
@@ -92,50 +113,64 @@ class LocationCreation(Job):
     def run(self, **data: t.Any) -> None:
         """Run the job."""
         self.csv_file = data["csv_file"]
+        self.debug = data["debug"]
         self.parse_csv()
-        self.logger.info(
-            msg="self.locations: {locations}".format(locations=self.locations),
-            extra={"grouping": "initialization"},
+        state_location_type: LocationType | None = self.get_location_type(
+            type_name="State",
         )
-        # state_location_type = LocationType.objects.get(name="State")
-        # city_location_type = LocationType.objects.get(name="City")
-        # active_status_object = Status.objects.get(name="Active")
-        # for row in self.locations:
-        #     # Find the state based on the two letter code
-        #     state = self.find_state_abbr(row["state"])
+        city_location_type: LocationType | None = self.get_location_type(
+            type_name="City",
+        )
+        active_status_object: Status = Status.objects.get(name="Active")
+        for row in self.locations:
+            state: str | None = self.find_state_abbr(
+                state_two_letters=row["state"],
+            )
 
-        #     # Get the object, create if it doesn't exsist
-        #     state_object, state_obj_created = Location.objects.get_or_create(
-        #         name=state,
-        #         defaults={
-        #             "name": state,
-        #             "status": active_status_object,
-        #             "location_type": state_location_type,
-        #         },
-        #     )
-        #     # We also need the city object
-        #     city_object, city_obj_created = Location.objects.get_or_create(
-        #         name=row["city"],
-        #         defaults={
-        #             "name": row["city"],
-        #             "status": active_status_object,
-        #             "parent": state_object,
-        #             "location_type": city_location_type,
-        #         },
-        #     )
-        #     location_type = self.get_location_type(row["name"])
-        #     site_object, created = Location.objects.get_or_create(
-        #         name=row["name"],
-        #         defaults={
-        #             "name": row["name"],
-        #             "status": active_status_object,
-        #             "location_type": location_type,
-        #             "parent": city_object,
-        #         },
-        #     )
-        #     if created:
-        #         self.logger.info(
-        #             f"Created the Following Entry - State: {state}, Site Name: {row['name']}, Location Type: {location_type}"
-        #         )
-        #     else:
-        #         self.logger.info("Location already Exists")
+            state_object, state_created = Location.objects.get_or_create(
+                name=state,
+                defaults={
+                    "name": state,
+                    "status": active_status_object,
+                    "location_type": state_location_type,
+                },
+            )
+            if state_created and self.debug:
+                self.logger.info(
+                    msg=f"Created the Following Entry - State: {state}, Location Type: {state_location_type}"
+                )
+
+            city_object, city_created = Location.objects.get_or_create(
+                name=row["city"],
+                defaults={
+                    "name": row["city"],
+                    "status": active_status_object,
+                    "parent": state_object,
+                    "location_type": city_location_type,
+                },
+            )
+            if city_created and self.debug:
+                self.logger.info(
+                    msg=f"Created the Following Entry - City: {row['city']}, Location Type: {city_location_type}"
+                )
+
+            location_type: LocationType | None = self.get_location_type(
+                site_name=row["name"]
+            )
+            site_object, location_created = Location.objects.get_or_create(
+                name=row["name"],
+                defaults={
+                    "name": row["name"],
+                    "status": active_status_object,
+                    "location_type": location_type,
+                    "parent": city_object,
+                },
+            )
+            if location_created and self.debug:
+                self.logger.info(
+                    msg="Created the Site: {site}".format(
+                        site=site_object.name,
+                    )
+                )
+            if not location_created and self.debug:
+                self.logger.info(msg="Location already exists")

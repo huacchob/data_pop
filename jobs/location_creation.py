@@ -139,3 +139,10 @@ class LocationCreation(Job):
         #         )
         #     else:
         #         self.logger.info("Location already Exists")
+
+
+jobs: list[t.Any] = [
+    LocationCreation,
+]
+
+register_jobs(*jobs)

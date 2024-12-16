@@ -145,7 +145,7 @@ class LocationCreation(Job):
                     msg=f"Created the Following Entry - State: {state}",
                 )
 
-            city_object, city_created = Location.objects.get_or_create(
+            city, city_created = Location.objects.get_or_create(
                 name=row["city"],
                 defaults={
                     "name": row["city"],
@@ -156,25 +156,25 @@ class LocationCreation(Job):
             )
             if city_created and self.debug:
                 self.logger.info(
-                    msg=f"Created the Following Entry - City: {row['city']}",
+                    msg=f"Created the Following Entry - City: {city.name}",
                 )
 
             location_type: LocationType | None = self.get_location_type(
                 site_name=row["name"]
             )
-            site_object, location_created = Location.objects.get_or_create(
+            site, location_created = Location.objects.get_or_create(
                 name=row["name"],
                 defaults={
                     "name": row["name"],
                     "status": active_status_object,
                     "location_type": location_type,
-                    "parent": city_object,
+                    "parent": city,
                 },
             )
             if location_created and self.debug:
                 self.logger.info(
-                    msg="Created the Site: {site}".format(
-                        site=site_object.name,
+                    msg="Created the Following Entry - Site: {site}".format(
+                        site=site.name,
                     )
                 )
             if not location_created and self.debug:

@@ -7,8 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.fields.files import FieldFile
 from nautobot.apps.jobs import FileVar, Job
 from nautobot.dcim.models import LocationType
-
-from .state_abbreviations import STATE_ABBREVIATIONS
+from state_abbreviations import STATE_ABBREVIATIONS
 
 name: str = "Location Jobs"
 

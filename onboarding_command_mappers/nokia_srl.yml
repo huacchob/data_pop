@@ -1,0 +1,32 @@
+---
+sync_devices:
+  hostname:
+    commands:
+      - command: "show version | as json"
+        parser: "none"
+        jpath: "[*].Hostname"
+        post_processor: "{{ obj | upper }}"
+  serial:
+    commands:
+      - command: "show version | as json"
+        parser: "none"
+        jpath: "[*].Serial Number"
+        post_processor: "{{ obj | upper }}"
+  device_type:
+    commands:
+      - command: "show version | as json"
+        parser: "none"
+        jpath: "[*].Chassis Type"
+        post_processor: "{{ obj | upper }}"
+  mgmt_interface:
+    commands:
+      - command: "show interface all | as json"
+        parser: "none"
+        jpath: "interfaces[?name == 'mgmt0'].subinterfaces[].address[?type == 'IPv4'].prefix"
+        post_processor: "{{ obj[0] | replace('/24', '')}}"
+  mask_length:
+    commands:
+      - command: "show interface all | as json"
+        parser: "none"
+        jpath: "interfaces[?name == 'mgmt0'].subinterfaces[].address[?type == 'IPv4'].prefix"
+        post_processor: "{{ obj[0] | split('/') | last }}"

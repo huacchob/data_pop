@@ -1,14 +1,12 @@
-Den-DC:
-    csr1:"172.18.0.10,cisco_xe"
-    csr2:"172.18.0.11,cisco_xe"
-    csr3:"172.18.0.12,cisco_xe"
-    nxos-spine1:"172.18.0.13,cisco_nxos"
-    nxos-spine2:"172.18.0.14,cisco_nxos"
-Ashburn-DC:
-    vmx1:"172.18.0.20,juniper_junos"
-    vmx2:"172.18.0.21,juniper_junos"
-    vmx3:"172.18.0.22,juniper_junos"
-    eos-spine1:"172.18.0.23,arista_eos"
-    eos-spine2:"172.18.0.24,arista_eos"
-    eos-leaf1:"172.18.0.25,arista_eos"
-    eos-leaf2:"172.18.0.26,arista_eos"
+ip_address_host,location_name,location_parent_name,device_role_name,namespace,device_status_name,interface_status_name,ip_address_status_name,secrets_group_name,platform,set_mgmt_only,update_devices_without_primary_ip,port,timeout
+172.18.0.10,"Den-DC","Denver",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",cisco_xe,True,True,22,10
+172.18.0.11,"Den-DC","Denver",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",cisco_xe,True,True,22,10
+172.18.0.12,"Den-DC","Denver",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",cisco_xe,True,True,22,10
+172.18.0.13,"Den-DC","Denver",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",cisco_nxos,True,True,22,10
+172.18.0.14,"Den-DC","Denver",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",cisco_nxos,True,True,22,10
+172.18.0.20,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",juniper_junos,True,True,22,10
+172.18.0.21,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",juniper_junos,True,True,22,10
+172.18.0.22,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",juniper_junos,True,True,22,10
+172.18.0.23,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",arista_eos,True,True,22,10
+172.18.0.24,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",arista_eos,True,True,22,10
+172.18.0.25,"Ashburn-DC","Ashburn",Network,Global,Active,Active,Active,"DATA_POPULATION_SECRETS_GROUPS",arista_eos,True,True,22,10
